@@ -1,7 +1,7 @@
 <template>
   <div class="ui card">
     <div class="image">
-      <img :src="imgURL">
+      <img :src="imageURL" @error="onError">
     </div>
     <div class="content">
       <a class="header">{{ movie.Title }}</a>
@@ -19,11 +19,19 @@ export default {
     movie: {
       type: Object,
       required: true
+    },
+  },
+  data() {
+    return {
+      imageURL: ''
     }
   },
-  computed: {
-    imgURL() {
-      return `http://img.omdbapi.com/?apikey=${window.API_KEY}&i=${this.movie.imdbID}`;
+  created() {
+    this.imageURL = `http://img.omdbapi.com/?apikey=${window.API_KEY}&i=${this.movie.imdbID}`;
+  },
+  methods: {
+    onError() {
+      this.imageURL = `data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAA=`;
     }
   }
 }

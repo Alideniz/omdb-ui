@@ -20,40 +20,42 @@
             </select>
           </div>
           <div class="field">
-            <button class="ui button" style="margin-top: 24px" type="button" @click="filter">Filter</button>
+            <button class="ui primary button" style="margin-top: 24px" type="button" @click="filter">Filter</button>
           </div>
-
         </div>
       </div>
-
     </div>
-    <div v-if="loading" class="ui segment">
-      <div class="ui active inverted dimmer">
-        <div class="ui text loader">Loading</div>
-      </div>
-      <p></p>
-    </div>
-    <div v-else class="ui four column doubling stackable grid container">
-      <div class="column" v-for="movie in movies" :key="movie.imdbID">
-        <movie :movie="movie"></movie>
-      </div>
+    <LoadingSpinner v-if="loading"/>
+    <MovieListContainer v-else :movies="movies"/>
+    <div v-if="isPaginationButtonsVisible" class="ui container pagination">
+      <button class="ui button" v-if="isPreviousButtonVisible" @click="previousPage">
+        <i class="angle double left icon"/>
+        Previous
+      </button>
+      <button class="ui button" v-if="isNextButtonVisible" @click="nextPage">
+        Next
+        <i class="angle double right icon"/>
+      </button>
     </div>
   </div>
 </template>
 
 <script>
 
-import Movie from "@/components/Movie";
+import MovieListContainer from "@/components/MovieListContainer";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 export default {
   name: 'App',
-  components: {Movie},
+  components: {LoadingSpinner, MovieListContainer},
   data: () => ({
     searchKey: '',
     year: 2020,
     type: 'movie',
     movies: [],
-    loading: false
+    loading: false,
+    page: 1,
+    totalResults: 0
   }),
   created() {
     window.API_KEY = "ef77f4f7";
@@ -68,6 +70,9 @@ export default {
         URL += `&y=${this.year}`;
       }
 
+      if (this.page > 1) {
+        URL += `&page=${this.page}`;
+      }
       if (this.type.length > 0) {
         URL += `&type=${this.type}`;
       }
@@ -79,8 +84,37 @@ export default {
         alert(response.Error);
       } else {
         this.movies = response.Search;
+        this.totalResults = response.totalResults;
       }
+    },
+    async nextPage() {
+      this.page++;
+      await this.filter();
+    },
+    async previousPage() {
+      this.page--;
+      await this.filter();
+    }
+  },
+  computed: {
+    isPaginationButtonsVisible() {
+      return this.totalResults > (10 * this.page);
+    },
+    isNextButtonVisible() {
+      return this.totalResults > (10 * this.page);
+    },
+    isPreviousButtonVisible() {
+      return this.page > 1;
     }
   }
 }
 </script>
+<style scoped>
+.pagination {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+</style>
